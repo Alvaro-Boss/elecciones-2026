@@ -1,0 +1,18 @@
+{
+  "name": "elecciones-peru-2026",
+  "version": "2.0.0",
+  "description": "Tracker en tiempo real Elecciones Generales Perú 2026 — Presidencia y Congreso Bicameral",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^2.7.0",
+    "papaparse": "^5.4.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
