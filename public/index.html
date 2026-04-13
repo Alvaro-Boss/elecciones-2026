@@ -407,8 +407,8 @@ function renderTendencia(historial) {
 function renderPresidencial(data) {
   if (!data || !data.participantes) { document.getElementById('pres-list').innerHTML='<div class="loading">Sin datos aún…</div>'; return; }
   const partic=data.participantes, totales=data.totales;
-  let pctActas=null;
-  if (totales) { const t=Array.isArray(totales)?totales[0]:totales; if(t){pctActas=t.porcentajeActas||t.porcentaje_actas; if(!pctActas&&t.actasComputadas&&t.totalActas)pctActas=t.actasComputadas/t.totalActas*100;} }
+  // pctActas viene calculado del servidor (campo actasContabilizadas de la ONPE)
+  const pctActas = data.pctActas || null;
   const sorted=[...partic].sort((a,b)=>b.porcentajeVotosValidos-a.porcentajeVotosValidos);
   const maxPct=sorted[0]?.porcentajeVotosValidos||1;
   const html=sorted.map((p,i)=>{
@@ -444,8 +444,8 @@ function renderCongreso(tipo, data) {
   const[tableId,progId,pctId,tsId,statId,hemId,totalSeats]=ids[tipo];
   if (!data||!data.participantes){document.getElementById(tableId).innerHTML='<div class="loading">Sin datos aún…</div>';return;}
   const partic=data.participantes,totales=data.totales;
-  let pctActas=null;
-  if(totales){const t=Array.isArray(totales)?totales[0]:totales;if(t){pctActas=t.porcentajeActas||t.porcentaje_actas;if(!pctActas&&t.actasComputadas&&t.totalActas)pctActas=t.actasComputadas/t.totalActas*100;}}
+  // pctActas viene calculado del servidor
+  const pctActas = data.pctActas || null;
   const sorted=[...partic].sort((a,b)=>b.porcentajeVotosValidos-a.porcentajeVotosValidos);
   const maxPct=sorted[0]?.porcentajeVotosValidos||1;
   drawHemicycle(hemId,sorted.map(p=>({nombre:p.nombreAgrupacionPolitica,votos:p.totalVotosValidos,pct:p.porcentajeVotosValidos})),totalSeats);

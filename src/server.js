@@ -22,11 +22,19 @@ const HEADERS = {
 };
 
 const cache = { presidencial: null, senado: null, diputados: null, lastFetch: null, onpeOnline: false };
-
-// ─── Historial para el gráfico lineal ────────────────────────────────────────
-// Guarda snapshots cada 5 min: { time, pctActas, candidatos: [{nombre, pct}] }
 const historial = [];
-const MAX_HISTORY = 288; // 24 horas a 5 min = 288 puntos
+const MAX_HISTORY = 288;
+
+function extractPctActas(totalesData) {
+  // totalesData puede ser objeto directo o array
+  const t = Array.isArray(totalesData) ? totalesData[0] : totalesData;
+  if (!t) return null;
+  // Campo real de la ONPE: actasContabilizadas
+  return t.actasContabilizadas
+      || t.porcentajeActas
+      || t.porcentaje_actas
+      || (t.contabilizadas && t.totalActas ? t.contabilizadas / t.totalActas * 100 : null);
+}
 
 async function fetchONPE(tipo) {
   const id = ELECCIONES[tipo];
@@ -59,42 +67,35 @@ async function refreshCache() {
   if (sen)  cache.senado       = sen;
   if (dip)  cache.diputados    = dip;
 
-  // Guardar snapshot en historial si hay datos presidenciales
+  // Snapshot para historial
   if (pres && pres.participantes && pres.participantes.length > 0) {
-    const t = Array.isArray(pres.totales) ? pres.totales[0] : pres.totales;
-    let pctActas = null;
-    if (t) {
-      pctActas = t.porcentajeActas || t.porcentaje_actas;
-      if (!pctActas && t.actasComputadas && t.totalActas) pctActas = t.actasComputadas/t.totalActas*100;
-    }
+    const pctActas = extractPctActas(pres.totales) || 0;
     const snapshot = {
       time: new Date().toISOString(),
-      pctActas: pctActas || 0,
+      pctActas,
       candidatos: pres.participantes
         .filter(p => p.porcentajeVotosValidos > 0)
-        .sort((a,b) => b.porcentajeVotosValidos - a.porcentajeVotosValidos)
-        .slice(0, 10) // top 10
+        .sort((a, b) => b.porcentajeVotosValidos - a.porcentajeVotosValidos)
+        .slice(0, 10)
         .map(p => ({
-          nombre: p.nombreAgrupacionPolitica,
+          nombre:    p.nombreAgrupacionPolitica,
           candidato: p.nombreCandidato,
-          pct: p.porcentajeVotosValidos,
-          votos: p.totalVotosValidos,
+          pct:       p.porcentajeVotosValidos,
+          votos:     p.totalVotosValidos,
         })),
     };
-    // Solo añadir si hay datos reales (pctActas > 0)
-    if (snapshot.pctActas > 0 || historial.length === 0) {
-      historial.push(snapshot);
-      if (historial.length > MAX_HISTORY) historial.shift();
-    }
+    historial.push(snapshot);
+    if (historial.length > MAX_HISTORY) historial.shift();
+    console.log(`[ONPE] Snapshot guardado | actas: ${pctActas.toFixed(2)}% | historial: ${historial.length} pts`);
   }
 
-  console.log(`[ONPE] Online: ${cache.onpeOnline} | Historial: ${historial.length} puntos`);
+  console.log(`[ONPE] Online: ${cache.onpeOnline}`);
 }
 
 refreshCache();
 setInterval(refreshCache, 5 * 60 * 1000);
 
-// ─── API ──────────────────────────────────────────────────────────────────────
+// ── API ───────────────────────────────────────────────────────────────────────
 app.get('/api/status', (req, res) => {
   res.json({ onpeOnline: cache.onpeOnline, lastFetch: cache.lastFetch,
     hasData: { presidencial: !!cache.presidencial, senado: !!cache.senado, diputados: !!cache.diputados } });
@@ -105,7 +106,9 @@ app.get('/api/datos/:tipo', (req, res) => {
   if (!['presidencial','senado','diputados'].includes(tipo)) return res.status(400).json({ error: 'Tipo invalido' });
   const data = cache[tipo];
   if (!data) return res.status(404).json({ error: 'Sin datos aun' });
-  res.json({ ok: true, lastFetch: cache.lastFetch, ...data });
+  // Añadir pctActas calculado al response
+  const pctActas = extractPctActas(data.totales);
+  res.json({ ok: true, lastFetch: cache.lastFetch, pctActas, ...data });
 });
 
 app.get('/api/historial', (req, res) => {
