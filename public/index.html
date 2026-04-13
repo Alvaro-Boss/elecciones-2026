@@ -243,7 +243,7 @@ function getColor(name) {
 function initials(n) { return (n||'??').split(/[\s-]+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?'; }
 function fmtPct(v) { return (v==null||isNaN(v))?'—':Number(v).toFixed(2)+'%'; }
 function fmtNum(n) { if(!n)return'—'; if(n>=1e6)return(n/1e6).toFixed(2)+'M'; if(n>=1e3)return Math.round(n/1000)+'k'; return String(Math.round(n)); }
-function nowTime() { return new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+function nowTime() { return new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'America/Lima'}); }
 function shortName(n) {
   // Acortar nombre del partido para el gráfico
   const map = {
@@ -334,7 +334,7 @@ function renderTendencia(historial) {
   // Labels = horas
   const labels = historial.map(s => {
     const d = new Date(s.time);
-    return d.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});
+    return d.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit',timeZone:'America/Lima'});
   });
 
   // Datasets
