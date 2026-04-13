@@ -5,123 +5,82 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
-// ─── ONPE data URLs ───────────────────────────────────────────────────────────
-// La ONPE publica CSVs en su plataforma de resultados. Cuando estén activos
-// (desde las 5 pm del 12/04/2026) el servidor los descarga y los sirve al frontend.
-// URLs conocidas de procesos anteriores como plantilla estructural:
-const ONPE_URLS = {
-  presidencial: process.env.ONPE_URL_PRES  || 'https://resultados2026.onpe.gob.pe/EG2026/resultados/presidencial.csv',
-  senado:       process.env.ONPE_URL_SEN   || 'https://resultados2026.onpe.gob.pe/EG2026/resultados/senado.csv',
-  diputados:    process.env.ONPE_URL_DIP   || 'https://resultados2026.onpe.gob.pe/EG2026/resultados/diputados.csv',
+// ─── ONPE API real ────────────────────────────────────────────────────────────
+// Base: https://resultadoelectoral.onpe.gob.pe/presentacion-backend/resumen-general/
+// idEleccion: 10=Presidencial, 15=Senado, 12=Diputados
+const BASE = 'https://resultadoelectoral.onpe.gob.pe/presentacion-backend/resumen-general';
+const ELECCIONES = {
+  presidencial: process.env.ID_PRES || '10',
+  senado:       process.env.ID_SEN  || '15',
+  diputados:    process.env.ID_DIP  || '12',
+};
+const HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+  'Accept': 'application/json',
+  'Referer': 'https://resultadoelectoral.onpe.gob.pe/',
+  'Origin':  'https://resultadoelectoral.onpe.gob.pe',
 };
 
-// Cache en memoria (se actualiza cada 5 minutos)
-const cache = {
-  presidencial: null,
-  senado: null,
-  diputados: null,
-  lastFetch: null,
-  onpeOnline: false,
-};
+const cache = { presidencial: null, senado: null, diputados: null, lastFetch: null, onpeOnline: false };
 
 async function fetchONPE(tipo) {
+  const id = ELECCIONES[tipo];
   try {
-    const url = ONPE_URLS[tipo];
-    const res = await fetch(url, {
-      timeout: 10000,
-      headers: { 'User-Agent': 'Mozilla/5.0 EleccionesTracker/2.0' }
-    });
-    if (!res.ok) return null;
-    const text = await res.text();
-    return text;
+    const [totRes, partRes] = await Promise.all([
+      fetch(`${BASE}/totales?idEleccion=${id}&tipoFiltro=eleccion`, { headers: HEADERS, timeout: 10000 }),
+      fetch(`${BASE}/participantes?idEleccion=${id}&tipoFiltro=eleccion`, { headers: HEADERS, timeout: 10000 }),
+    ]);
+    if (!totRes.ok || !partRes.ok) return null;
+    const totales      = await totRes.json();
+    const participantes = await partRes.json();
+    if (!totales.success || !participantes.success) return null;
+    return { totales: totales.data, participantes: participantes.data };
   } catch (e) {
+    console.error(`[ONPE] Error ${tipo}:`, e.message);
     return null;
   }
 }
 
 async function refreshCache() {
-  console.log('[ONPE] Intentando actualizar caché...', new Date().toISOString());
+  console.log('[ONPE] Actualizando...', new Date().toISOString());
   const [pres, sen, dip] = await Promise.all([
     fetchONPE('presidencial'),
     fetchONPE('senado'),
     fetchONPE('diputados'),
   ]);
-
-  const online = !!(pres || sen || dip);
-  cache.onpeOnline = online;
-  cache.lastFetch = new Date().toISOString();
-
+  cache.onpeOnline = !!(pres || sen || dip);
+  cache.lastFetch  = new Date().toISOString();
   if (pres) cache.presidencial = pres;
-  if (sen)  cache.senado = sen;
-  if (dip)  cache.diputados = dip;
-
-  console.log(`[ONPE] Online: ${online} | Actualizado: ${cache.lastFetch}`);
+  if (sen)  cache.senado       = sen;
+  if (dip)  cache.diputados    = dip;
+  console.log(`[ONPE] Online: ${cache.onpeOnline}`);
 }
 
-// Actualizar al arrancar y cada 5 minutos
 refreshCache();
 setInterval(refreshCache, 5 * 60 * 1000);
 
 // ─── API endpoints ────────────────────────────────────────────────────────────
-
-// Estado general del sistema
 app.get('/api/status', (req, res) => {
-  res.json({
-    onpeOnline: cache.onpeOnline,
-    lastFetch: cache.lastFetch,
-    hasData: {
-      presidencial: !!cache.presidencial,
-      senado: !!cache.senado,
-      diputados: !!cache.diputados,
-    }
-  });
+  res.json({ onpeOnline: cache.onpeOnline, lastFetch: cache.lastFetch,
+    hasData: { presidencial: !!cache.presidencial, senado: !!cache.senado, diputados: !!cache.diputados } });
 });
 
-// CSV crudo de ONPE (para que el frontend parsee con PapaParse)
-app.get('/api/csv/:tipo', (req, res) => {
+app.get('/api/datos/:tipo', (req, res) => {
   const { tipo } = req.params;
-  if (!['presidencial', 'senado', 'diputados'].includes(tipo)) {
-    return res.status(400).json({ error: 'Tipo inválido' });
-  }
+  if (!['presidencial','senado','diputados'].includes(tipo)) return res.status(400).json({ error: 'Tipo invalido' });
   const data = cache[tipo];
-  if (!data) {
-    return res.status(404).json({ error: 'Sin datos disponibles aún' });
-  }
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.send(data);
+  if (!data) return res.status(404).json({ error: 'Sin datos aun' });
+  res.json({ ok: true, lastFetch: cache.lastFetch, ...data });
 });
 
-// Proxy manual: el frontend puede pedir que se descargue un CSV de una URL específica
-app.post('/api/fetch-csv', async (req, res) => {
-  const { url } = req.body;
-  if (!url || !url.includes('onpe.gob.pe')) {
-    return res.status(400).json({ error: 'URL debe ser de onpe.gob.pe' });
-  }
-  try {
-    const r = await fetch(url, { timeout: 15000 });
-    if (!r.ok) return res.status(r.status).json({ error: 'Error al descargar' });
-    const text = await r.text();
-    res.setHeader('Content-Type', 'text/csv');
-    res.send(text);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// Forzar refresco (útil para testear)
 app.post('/api/refresh', async (req, res) => {
   await refreshCache();
   res.json({ ok: true, onpeOnline: cache.onpeOnline, lastFetch: cache.lastFetch });
 });
 
-// ─── Frontend ─────────────────────────────────────────────────────────────────
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
+app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../public/index.html')));
 
-app.listen(PORT, () => {
-  console.log(`🗳️  Elecciones Perú 2026 corriendo en puerto ${PORT}`);
-});
+app.listen(PORT, () => console.log(`🗳️  Elecciones Peru 2026 en puerto ${PORT}`));

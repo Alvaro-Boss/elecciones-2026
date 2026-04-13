@@ -3,231 +3,154 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Elecciones Generales Perú 2026 — Tracker en vivo</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<title>Elecciones Generales Perú 2026 — Resultados en vivo</title>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg:       #0c0c0e;
-  --bg2:      #14141a;
-  --bg3:      #1c1c26;
-  --bg4:      #242430;
-  --border:   rgba(255,255,255,0.07);
-  --border2:  rgba(255,255,255,0.13);
-  --text:     #ececec;
-  --text2:    #888;
-  --text3:    #555;
-  --red:      #e05252;
-  --blue:     #4a90d9;
-  --green:    #3dab7c;
-  --amber:    #d4922a;
-  --purple:   #7c6fcd;
-  --coral:    #d46a3a;
-  --grass:    #6aab3d;
-  --pink:     #c4527e;
-  --gray:     #7a7a7a;
-  --radius:   10px;
-  --radius-sm: 6px;
-  --mono: 'SF Mono', 'Fira Code', monospace;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0c0e;--bg2:#14141a;--bg3:#1c1c26;--bg4:#242430;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#ececec;--text2:#888;--text3:#555;
+  --red:#e05252;--blue:#4a90d9;--green:#3dab7c;--amber:#d4922a;
+  --purple:#7c6fcd;--coral:#d46a3a;--grass:#6aab3d;--pink:#c4527e;
+  --radius:10px;--radius-sm:6px;--mono:'SF Mono','Fira Code',monospace;
 }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  min-height: 100vh;
-  font-size: 14px;
-  line-height: 1.5;
-}
-a { color: var(--blue); }
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;min-height:100vh;font-size:14px;line-height:1.5}
+.container{max-width:1040px;margin:0 auto;padding:1.5rem 1rem 4rem}
 
-/* ── Layout ───────────────────────────────────────────── */
-.container { max-width: 1040px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+/* Header */
+.header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem}
+.header h1{font-size:21px;font-weight:700;letter-spacing:-0.3px}
+.header h1 span{color:var(--red)}
+.header-sub{font-size:12px;color:var(--text2);margin-top:3px}
+.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.live-pill{display:flex;align-items:center;gap:6px;background:rgba(224,82,82,0.1);border:1px solid rgba(224,82,82,0.25);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--red)}
+.offline-pill{display:flex;align-items:center;gap:6px;background:rgba(120,120,120,0.1);border:1px solid rgba(120,120,120,0.2);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--text2)}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot-live{background:var(--red);animation:pulse 1.4s ease-in-out infinite}
+.dot-off{background:var(--text3)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
 
-/* ── Header ───────────────────────────────────────────── */
-.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-.header h1 { font-size: 21px; font-weight: 700; letter-spacing: -0.3px; }
-.header h1 span { color: var(--red); }
-.header-sub { font-size: 12px; color: var(--text2); margin-top: 3px; }
-.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-.live-pill { display: flex; align-items: center; gap: 6px; background: rgba(224,82,82,0.1); border: 1px solid rgba(224,82,82,0.25); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; color: var(--red); }
-.offline-pill { display: flex; align-items: center; gap: 6px; background: rgba(120,120,120,0.1); border: 1px solid rgba(120,120,120,0.2); border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--text2); }
-.dot { width: 7px; height: 7px; border-radius: 50%; }
-.dot-live { background: var(--red); animation: pulse 1.4s ease-in-out infinite; }
-.dot-off  { background: var(--text3); }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+/* Alert */
+.alert{background:rgba(212,146,42,0.1);border:1px solid rgba(212,146,42,0.25);border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#d4a252;margin-bottom:1.25rem;line-height:1.6;display:none}
+.alert.show{display:block}
 
-/* ── Alert banner ─────────────────────────────────────── */
-.alert { background: rgba(212,146,42,0.1); border: 1px solid rgba(212,146,42,0.25); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: #d4a252; margin-bottom: 1.25rem; line-height: 1.6; display: none; }
-.alert.show { display: block; }
+/* Stats */
+.stats-bar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:1.25rem}
+@media(max-width:580px){.stats-bar{grid-template-columns:1fr 1fr}}
+.stat{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+.stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px}
+.stat-val{font-size:20px;font-weight:700;color:var(--text);font-family:var(--mono)}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:3px}
 
-/* ── Stats bar ────────────────────────────────────────── */
-.stats-bar { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; margin-bottom: 1.25rem; }
-@media(max-width:580px){ .stats-bar { grid-template-columns: 1fr 1fr; } }
-.stat { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
-.stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; }
-.stat-val   { font-size: 20px; font-weight: 700; color: var(--text); font-family: var(--mono); }
-.stat-sub   { font-size: 11px; color: var(--text3); margin-top: 3px; }
+/* Tabs */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.25rem;overflow-x:auto}
+.tab{padding:9px 18px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color 0.15s}
+.tab.active{color:var(--text);border-bottom-color:var(--red)}
+.tab:hover:not(.active){color:var(--text)}
+.section{display:none}
+.section.active{display:block}
 
-/* ── Tabs ─────────────────────────────────────────────── */
-.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 1.25rem; overflow-x: auto; }
-.tab { padding: 9px 18px; font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; transition: color 0.15s; }
-.tab.active { color: var(--text); border-bottom-color: var(--red); }
-.tab:hover:not(.active) { color: var(--text); }
-.section { display: none; }
-.section.active { display: block; }
+/* Card */
+.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem}
+.card-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+.card-title{font-size:14px;font-weight:600}
+.card-ts{font-size:11px;color:var(--text3);font-family:var(--mono)}
 
-/* ── Card ─────────────────────────────────────────────── */
-.card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
-.card-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
-.card-title { font-size: 14px; font-weight: 600; }
-.card-ts { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+/* Progress */
+.prog-wrap{margin-bottom:1.25rem}
+.prog-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:5px}
+.prog-bg{background:var(--bg4);border-radius:4px;height:6px;overflow:hidden}
+.prog-fill{height:100%;border-radius:4px;background:var(--red);transition:width 1s ease}
 
-/* ── Progress ─────────────────────────────────────────── */
-.prog-wrap { margin-bottom: 1.25rem; }
-.prog-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); margin-bottom: 5px; }
-.prog-bg   { background: var(--bg4); border-radius: 4px; height: 6px; overflow: hidden; }
-.prog-fill { height: 100%; border-radius: 4px; background: var(--red); transition: width 1s ease; }
+/* Candidate rows */
+.cand-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--border)}
+.cand-row:last-child{border-bottom:none}
+.crank{font-size:11px;color:var(--text3);font-family:var(--mono);width:20px;text-align:center;flex-shrink:0}
+.avt{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.cinfo{flex:1;min-width:0}
+.cname{font-size:13px;font-weight:500;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.cparty{font-size:11px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cbar-bg{background:var(--bg4);border-radius:2px;height:4px;margin-top:5px;overflow:hidden}
+.cbar-fill{height:100%;border-radius:2px;transition:width 1s ease}
+.cnum{text-align:right;flex-shrink:0;min-width:60px}
+.cpct{font-size:15px;font-weight:700;font-family:var(--mono)}
+.cvot{font-size:10px;color:var(--text3);margin-top:1px}
 
-/* ── Candidate rows (presidencial) ────────────────────── */
-.cand-list { display: flex; flex-direction: column; gap: 0; }
-.cand-row  { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid var(--border); }
-.cand-row:last-child { border-bottom: none; }
-.crank  { font-size: 11px; color: var(--text3); font-family: var(--mono); width: 18px; text-align: center; flex-shrink: 0; }
-.avt    { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-.cinfo  { flex: 1; min-width: 0; }
-.cname  { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
-.cparty { font-size: 11px; color: var(--text3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cbar-bg   { background: var(--bg4); border-radius: 2px; height: 4px; margin-top: 5px; overflow: hidden; }
-.cbar-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
-.cnum  { text-align: right; flex-shrink: 0; min-width: 52px; }
-.cpct  { font-size: 14px; font-weight: 700; font-family: var(--mono); }
-.cvot  { font-size: 10px; color: var(--text3); margin-top: 1px; }
+/* Badges */
+.badge{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:700}
+.badge-1{background:rgba(212,146,42,0.2);color:#d4a252}
+.badge-2{background:rgba(74,144,217,0.15);color:#7ab0e0}
+.badge-2v{background:rgba(224,82,82,0.15);color:#e08282}
+.badge-valla{background:rgba(61,171,124,0.15);color:#5cbb96}
+.badge-novalla{background:rgba(120,120,120,0.1);color:var(--text3)}
 
-/* ── Badge ────────────────────────────────────────────── */
-.badge { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700; letter-spacing: 0.03em; }
-.badge-1  { background: rgba(212,146,42,0.2); color: #d4a252; }
-.badge-2  { background: rgba(74,144,217,0.15); color: #7ab0e0; }
-.badge-2v { background: rgba(224,82,82,0.15); color: #e08282; }
-.badge-valla { background: rgba(61,171,124,0.15); color: #5cbb96; }
-.badge-novalla { background: rgba(120,120,120,0.1); color: var(--text3); }
+/* Partido table */
+.ptable{width:100%;border-collapse:collapse;font-size:13px}
+.ptable th{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;padding:0 8px 8px 0;text-align:left;border-bottom:0.5px solid var(--border)}
+.ptable th:last-child,.ptable td:last-child{text-align:right}
+.ptable td{padding:7px 8px 7px 0;border-bottom:0.5px solid var(--border);vertical-align:middle}
+.ptable tr:last-child td{border-bottom:none}
+.ptable tr.below-valla td{opacity:0.4}
+.p-swatch{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:6px;vertical-align:middle;flex-shrink:0}
+.pname-cell{display:flex;align-items:center}
+.bar-cell{width:120px}
+@media(max-width:600px){.bar-cell{display:none}}
+.mini-bar-bg{background:var(--bg4);border-radius:2px;height:5px;overflow:hidden}
+.mini-bar-fill{height:100%;border-radius:2px;transition:width 1s ease}
+.escanos-num{font-size:15px;font-weight:700;font-family:var(--mono)}
 
-/* ── Partido table (congreso) ─────────────────────────── */
-.ptable { width: 100%; border-collapse: collapse; font-size: 13px; }
-.ptable th { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; padding: 0 8px 8px 0; text-align: left; border-bottom: 0.5px solid var(--border); }
-.ptable th:last-child, .ptable td:last-child { text-align: right; }
-.ptable td { padding: 7px 8px 7px 0; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
-.ptable tr:last-child td { border-bottom: none; }
-.ptable tr.below-valla td { opacity: 0.45; }
-.p-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 6px; vertical-align: middle; flex-shrink: 0; }
-.pname-cell { display: flex; align-items: center; }
-.bar-cell { width: 120px; }
-@media(max-width:600px){ .bar-cell { display: none; } }
-.mini-bar-bg   { background: var(--bg4); border-radius: 2px; height: 5px; overflow: hidden; }
-.mini-bar-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
-.escanos-num { font-size: 15px; font-weight: 700; font-family: var(--mono); }
+/* Hemicycle */
+.hemicycle-wrap{display:flex;justify-content:center;margin:0.5rem 0 1.25rem}
+.hemicycle-wrap svg{max-width:480px;width:100%}
 
-/* ── Hemicycle SVG ────────────────────────────────────── */
-.hemicycle-wrap { display: flex; justify-content: center; margin: 0.5rem 0 1rem; }
-.hemicycle-wrap svg { max-width: 500px; width: 100%; }
+/* Nota */
+.nota{background:var(--bg3);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.7;margin-top:1rem}
+.nota strong{color:var(--text)}
 
-/* ── Nota box ─────────────────────────────────────────── */
-.nota { background: var(--bg3); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--text2); line-height: 1.7; margin-top: 1rem; }
-.nota strong { color: var(--text); }
-
-/* ── CSV upload ───────────────────────────────────────── */
-.csv-zone { border: 1.5px dashed var(--border2); border-radius: var(--radius); padding: 18px; text-align: center; background: var(--bg3); transition: border-color 0.2s; }
-.csv-zone:hover { border-color: var(--blue); }
-.csv-zone p { font-size: 13px; color: var(--text2); margin-bottom: 10px; }
-.csv-zone input[type=file] { display: none; }
-.csv-zone label { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 7px 16px; background: var(--bg4); border: 0.5px solid var(--border2); border-radius: var(--radius-sm); color: var(--text2); transition: all 0.15s; }
-.csv-zone label:hover { color: var(--text); border-color: var(--text3); }
-.url-row { display: flex; gap: 8px; margin-top: 10px; }
-.url-row input { flex: 1; background: var(--bg4); border: 0.5px solid var(--border2); border-radius: var(--radius-sm); padding: 7px 10px; color: var(--text); font-size: 12px; outline: none; }
-.url-row input:focus { border-color: var(--blue); }
-.url-row button { font-size: 12px; padding: 7px 14px; background: var(--blue); border: none; border-radius: var(--radius-sm); color: #fff; cursor: pointer; font-weight: 600; }
-.url-row button:hover { background: #5a9fe5; }
-
-/* ── Refresh button ───────────────────────────────────── */
-.footer-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 1.5rem; }
-.footer-note { font-size: 11px; color: var(--text3); }
-.btn-refresh { font-size: 12px; padding: 6px 14px; background: var(--bg2); border: 0.5px solid var(--border2); border-radius: var(--radius-sm); color: var(--text2); cursor: pointer; transition: all 0.15s; }
-.btn-refresh:hover { color: var(--text); border-color: var(--text2); }
-.btn-refresh:disabled { opacity: 0.4; cursor: default; }
-
-/* ── Threshold section ────────────────────────────────── */
-.threshold-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-@media(max-width:580px){ .threshold-grid { grid-template-columns: 1fr; } }
-.th-card { background: var(--bg3); border-radius: var(--radius-sm); padding: 12px; }
-.th-label { font-size: 11px; color: var(--text3); margin-bottom: 8px; }
-
-/* ── Scrollbar ────────────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
-
-/* ── Loading state ────────────────────────────────────── */
-.loading { color: var(--text3); font-size: 13px; padding: 2rem 0; text-align: center; }
-
-/* ── Two-panel layout for congreso ───────────────────── */
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-@media(max-width:700px){ .two-col { grid-template-columns: 1fr; } }
+/* Footer */
+.footer-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:1.5rem}
+.footer-note{font-size:11px;color:var(--text3)}
+.btn-refresh{font-size:12px;padding:6px 14px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-sm);color:var(--text2);cursor:pointer;transition:all 0.15s}
+.btn-refresh:hover{color:var(--text);border-color:var(--text2)}
+.btn-refresh:disabled{opacity:0.4;cursor:default}
+.loading{color:var(--text3);font-size:13px;padding:2rem 0;text-align:center}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
 </style>
 </head>
 <body>
 <div class="container">
 
-<!-- ── HEADER ── -->
 <div class="header">
   <div>
     <h1>Elecciones Generales <span>Perú 2026</span></h1>
-    <div class="header-sub">12 de abril de 2026 · Presidencia + Congreso Bicameral · Fuente: ONPE</div>
+    <div class="header-sub">12 de abril de 2026 · Datos oficiales ONPE en tiempo real</div>
   </div>
   <div class="header-right">
     <div id="status-pill" class="offline-pill"><span class="dot dot-off" id="status-dot"></span><span id="status-text">Conectando...</span></div>
-    <div style="font-size:11px;color:var(--text3);" id="last-update-hdr">—</div>
+    <div style="font-size:11px;color:var(--text3)" id="last-update-hdr">—</div>
   </div>
 </div>
 
-<!-- ── ALERT ── -->
 <div class="alert show" id="alert-box">
-  ⚠️ Resultados ONPE aún no disponibles. Los datos comenzarán a publicarse desde las <strong>5:00 pm</strong>. 
-  Puedes <strong>subir un CSV manualmente</strong> en la pestaña "Datos / CSV". 
-  La página intentará conectarse automáticamente cada 5 minutos.
+  ⚠️ Esperando datos de la ONPE. Los resultados se publican desde las <strong>5:00 pm</strong> del 12 de abril. La página se actualiza automáticamente cada 5 minutos.
 </div>
 
-<!-- ── STATS BAR ── -->
 <div class="stats-bar">
-  <div class="stat">
-    <div class="stat-label">Actas presidencial</div>
-    <div class="stat-val" id="s-pres-pct">—</div>
-    <div class="stat-sub" id="s-pres-sub">de ~228k mesas</div>
-  </div>
-  <div class="stat">
-    <div class="stat-label">Actas Senado</div>
-    <div class="stat-val" id="s-sen-pct">—</div>
-    <div class="stat-sub">60 escaños · nac.</div>
-  </div>
-  <div class="stat">
-    <div class="stat-label">Actas Diputados</div>
-    <div class="stat-val" id="s-dip-pct">—</div>
-    <div class="stat-sub">130 escaños</div>
-  </div>
-  <div class="stat">
-    <div class="stat-label">Actualizado</div>
-    <div class="stat-val" style="font-size:14px;" id="s-time">—</div>
-    <div class="stat-sub">Sistema SPR · ONPE</div>
-  </div>
+  <div class="stat"><div class="stat-label">Presidencial</div><div class="stat-val" id="s-pres-pct">—</div><div class="stat-sub">actas escrutadas</div></div>
+  <div class="stat"><div class="stat-label">Senado</div><div class="stat-val" id="s-sen-pct">—</div><div class="stat-sub">60 escaños</div></div>
+  <div class="stat"><div class="stat-label">Diputados</div><div class="stat-val" id="s-dip-pct">—</div><div class="stat-sub">130 escaños</div></div>
+  <div class="stat"><div class="stat-label">Actualizado</div><div class="stat-val" style="font-size:14px" id="s-time">—</div><div class="stat-sub">Sistema ONPE</div></div>
 </div>
 
-<!-- ── TABS ── -->
 <div class="tabs">
   <button class="tab active" onclick="showTab('presidencial')">Presidencial</button>
   <button class="tab" onclick="showTab('senado')">Senado (60)</button>
   <button class="tab" onclick="showTab('diputados')">Diputados (130)</button>
-  <button class="tab" onclick="showTab('datos')">Datos / CSV</button>
 </div>
 
-<!-- ══════════════ PRESIDENCIAL ══════════════ -->
+<!-- PRESIDENCIAL -->
 <div id="tab-presidencial" class="section active">
   <div class="card">
     <div class="card-header">
@@ -235,45 +158,32 @@ a { color: var(--blue); }
       <span class="card-ts" id="pres-ts">—</span>
     </div>
     <div class="prog-wrap">
-      <div class="prog-meta"><span>Actas escrutadas</span><span id="pres-pct-label">0.00%</span></div>
+      <div class="prog-meta"><span>Actas escrutadas</span><span id="pres-pct-label">—</span></div>
       <div class="prog-bg"><div class="prog-fill" id="pres-prog" style="width:0%"></div></div>
     </div>
-    <div class="cand-list" id="pres-list">
-      <div class="loading">Esperando datos de ONPE…</div>
-    </div>
-    <div class="nota">
-      Para ganar en <strong>primera vuelta</strong> se requiere más del 50% de votos válidos.
-      Si ningún candidato lo logra, los dos más votados pasan a <strong>balotaje el 7 de junio de 2026</strong>.
-      Los votos blancos y nulos no cuentan para el 50%+1.
-    </div>
+    <div id="pres-list"><div class="loading">Esperando datos de ONPE…</div></div>
+    <div class="nota">Para ganar en <strong>primera vuelta</strong> se necesita más del 50% de votos válidos. Si ningún candidato lo logra, los dos más votados pasan a <strong>balotaje el 7 de junio de 2026</strong>.</div>
   </div>
 </div>
 
-<!-- ══════════════ SENADO ══════════════ -->
+<!-- SENADO -->
 <div id="tab-senado" class="section">
   <div class="card">
     <div class="card-header">
-      <div class="card-title">Senado · 60 escaños</div>
+      <div class="card-title">Senado · 60 escaños · circunscripción nacional</div>
       <span class="card-ts" id="sen-ts">—</span>
     </div>
     <div class="prog-wrap">
-      <div class="prog-meta"><span>Actas escrutadas</span><span id="sen-pct-label">0.00%</span></div>
+      <div class="prog-meta"><span>Actas escrutadas</span><span id="sen-pct-label">—</span></div>
       <div class="prog-bg"><div class="prog-fill" id="sen-prog" style="width:0%"></div></div>
     </div>
-    <!-- Hemicycle -->
-    <div class="hemicycle-wrap">
-      <svg id="sen-hemicycle" viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg"></svg>
-    </div>
+    <div class="hemicycle-wrap"><svg id="sen-hemicycle" viewBox="0 0 500 270" xmlns="http://www.w3.org/2000/svg"></svg></div>
     <div id="sen-table"><div class="loading">Esperando datos de ONPE…</div></div>
-    <div class="nota">
-      <strong>30 senadores nacionales</strong> elegidos por todos los electores en circunscripción única nacional.
-      <strong>30 senadores regionales</strong>: 1 por cada uno de los 27 distritos electorales (Lima Metropolitana elige 4).
-      Valla electoral: <strong>5%</strong> de votos válidos o ≥6 escaños en Diputados.
-    </div>
+    <div class="nota"><strong>30 senadores nacionales</strong> + <strong>30 senadores regionales</strong>. Valla electoral: <strong>5%</strong> de votos válidos.</div>
   </div>
 </div>
 
-<!-- ══════════════ DIPUTADOS ══════════════ -->
+<!-- DIPUTADOS -->
 <div id="tab-diputados" class="section">
   <div class="card">
     <div class="card-header">
@@ -281,493 +191,319 @@ a { color: var(--blue); }
       <span class="card-ts" id="dip-ts">—</span>
     </div>
     <div class="prog-wrap">
-      <div class="prog-meta"><span>Actas escrutadas</span><span id="dip-pct-label">0.00%</span></div>
+      <div class="prog-meta"><span>Actas escrutadas</span><span id="dip-pct-label">—</span></div>
       <div class="prog-bg"><div class="prog-fill" id="dip-prog" style="width:0%"></div></div>
     </div>
-    <!-- Hemicycle -->
-    <div class="hemicycle-wrap">
-      <svg id="dip-hemicycle" viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg"></svg>
-    </div>
+    <div class="hemicycle-wrap"><svg id="dip-hemicycle" viewBox="0 0 500 270" xmlns="http://www.w3.org/2000/svg"></svg></div>
     <div id="dip-table"><div class="loading">Esperando datos de ONPE…</div></div>
-    <div class="nota">
-      Elegidos en <strong>27 circunscripciones regionales</strong> por representación proporcional.
-      Lima Metropolitana es la circunscripción más grande. 
-      Misma valla que el Senado: <strong>5%</strong> de votos válidos o ≥6 escaños.
-    </div>
+    <div class="nota">Elegidos en <strong>27 circunscripciones regionales</strong>. Valla: <strong>5%</strong> de votos válidos.</div>
   </div>
 </div>
 
-<!-- ══════════════ DATOS / CSV ══════════════ -->
-<div id="tab-datos" class="section">
-  <div class="card">
-    <div class="card-title" style="margin-bottom:1rem;">Cargar datos manualmente</div>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.7;">
-      Cuando la ONPE publique resultados, puedes descargar el CSV desde su plataforma oficial
-      y subirlo aquí para visualizarlo inmediatamente — sin esperar la sincronización automática.
-      El CSV debe tener columnas: <code style="color:var(--blue)">PARTIDO, VOTOS, ACTAS_COMP, ACTAS_TOTAL</code> (presidencial)
-      o <code style="color:var(--blue)">PARTIDO, ESCANOS, VOTOS, ACTAS_COMP, ACTAS_TOTAL</code> (congreso).
-    </p>
-
-    <div style="margin-bottom:1.5rem;">
-      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">PRESIDENCIAL — subir CSV</div>
-      <div class="csv-zone">
-        <p>Arrastra un CSV o haz clic para seleccionar</p>
-        <label>📂 Cargar CSV presidencial<input type="file" accept=".csv" id="file-pres" onchange="handleFile(event,'presidencial')"></label>
-      </div>
-    </div>
-
-    <div style="margin-bottom:1.5rem;">
-      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">SENADO — subir CSV</div>
-      <div class="csv-zone">
-        <p>Arrastra un CSV o haz clic para seleccionar</p>
-        <label>📂 Cargar CSV Senado<input type="file" accept=".csv" id="file-sen" onchange="handleFile(event,'senado')"></label>
-      </div>
-    </div>
-
-    <div style="margin-bottom:1.5rem;">
-      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">DIPUTADOS — subir CSV</div>
-      <div class="csv-zone">
-        <p>Arrastra un CSV o haz clic para seleccionar</p>
-        <label>📂 Cargar CSV Diputados<input type="file" accept=".csv" id="file-dip" onchange="handleFile(event,'diputados')"></label>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title" style="margin-bottom:1rem;">Fuentes oficiales ONPE</div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <a href="https://resultados2026.onpe.gob.pe" target="_blank" style="font-size:13px;">↗ resultados2026.onpe.gob.pe — Portal oficial de resultados</a>
-      <a href="https://eg2026.onpe.gob.pe/electores-y-miembros-de-mesa/resultados-en-tiempo-real/" target="_blank" style="font-size:13px;">↗ eg2026.onpe.gob.pe — Resultados en tiempo real (ONPE)</a>
-      <a href="https://www.datosabiertos.gob.pe/users/onpedatos" target="_blank" style="font-size:13px;">↗ datosabiertos.gob.pe — Datos abiertos ONPE (históricos)</a>
-      <a href="https://portal.jne.gob.pe/portal/Pagina/Ver/979/page/Elecciones-Generales-2026" target="_blank" style="font-size:13px;">↗ portal.jne.gob.pe — JNE Elecciones Generales 2026</a>
-    </div>
-    <div class="nota" style="margin-top:1rem;">
-      El servidor intenta descargar los CSVs de resultados de la ONPE cada <strong>5 minutos</strong> automáticamente. 
-      Cuando la ONPE active su sistema de resultados (desde las 5:00 pm), los datos aparecerán aquí en vivo.
-    </div>
-  </div>
-</div>
-
-<!-- ── FOOTER ── -->
 <div class="footer-bar">
-  <div class="footer-note">Actualización automática cada 5 min · Datos ONPE — Sistema SPR/SCE/STAE</div>
-  <button class="btn-refresh" id="btn-refresh" onclick="manualRefresh()">Forzar actualización</button>
+  <div class="footer-note">Fuente: ONPE — resultadoelectoral.onpe.gob.pe · Actualización automática cada 5 min</div>
+  <button class="btn-refresh" id="btn-refresh" onclick="manualRefresh()">Actualizar ahora</button>
 </div>
 
-</div><!-- /container -->
+</div>
 
 <script>
-// ════════════════════════════════════════════════════════
-// COLORES POR PARTIDO
-// ════════════════════════════════════════════════════════
-const PARTY_COLORS = {
-  'FUERZA POPULAR':            '#e05252',
-  'RENOVACION POPULAR':        '#3dab7c',
-  'PAIS PARA TODOS':           '#4a90d9',
-  'ALIANZA PARA EL PROGRESO':  '#c4527e',
-  'JUNTOS POR EL PERU':        '#d46a3a',
-  'AHORA NACION':              '#6aab3d',
-  'BUEN GOBIERNO':             '#d4922a',
-  'PERU PRIMERO':              '#7c6fcd',
-  'PERU LIBRE':                '#7a7a7a',
-  'PARTIDO DEL BUEN GOBIERNO': '#d4922a',
-  'CIVICO OBRAS':              '#7c6fcd',
-  'PODEMOS PERU':              '#c4527e',
-  // fallback
-  'DEFAULT': '#555',
+// ── Colores por partido ──────────────────────────────────────────────────────
+const COLORS = {
+  'FUERZA POPULAR':                    '#e05252',
+  'RENOVACION POPULAR':                '#3dab7c',
+  'RENOVACIÓN POPULAR':                '#3dab7c',
+  'PAIS PARA TODOS':                   '#4a90d9',
+  'PAÍS PARA TODOS':                   '#4a90d9',
+  'ALIANZA PARA EL PROGRESO':          '#c4527e',
+  'JUNTOS POR EL PERU':                '#d46a3a',
+  'JUNTOS POR EL PERÚ':                '#d46a3a',
+  'AHORA NACION':                      '#6aab3d',
+  'AHORA NACIÓN':                      '#6aab3d',
+  'PARTIDO DEL BUEN GOBIERNO':         '#d4922a',
+  'PARTIDO POLITICO PERU PRIMERO':     '#7c6fcd',
+  'PARTIDO POLÍTICO PERÚ PRIMERO':     '#7c6fcd',
+  'PARTIDO POLITICO NACIONAL PERU LIBRE': '#888',
+  'PARTIDO POLÍTICO NACIONAL PERÚ LIBRE': '#888',
+  'PARTIDO CIVICO OBRAS':              '#9b59b6',
+  'PARTIDO CÍVICO OBRAS':              '#9b59b6',
+  'PODEMOS PERU':                      '#e67e22',
+  'PODEMOS PERÚ':                      '#e67e22',
+  'PRIMERO LA GENTE':                  '#1abc9c',
 };
 
-function partyColor(name) {
-  if (!name) return PARTY_COLORS.DEFAULT;
-  const key = name.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  for (const [k,v] of Object.entries(PARTY_COLORS)) {
-    if (key.includes(k)) return v;
+function getColor(name) {
+  if (!name) return '#555';
+  const upper = name.toUpperCase();
+  for (const [k,v] of Object.entries(COLORS)) {
+    if (upper.includes(k)) return v;
   }
-  // hash-based fallback
-  let h = 0; for (const c of name) h = (h*31+c.charCodeAt(0)) & 0xffff;
-  const palette = ['#e05252','#4a90d9','#3dab7c','#d4922a','#7c6fcd','#d46a3a','#6aab3d','#c4527e'];
-  return palette[h % palette.length];
+  // hash fallback
+  let h = 0; for (const c of name) h = (h*31+c.charCodeAt(0))&0xffff;
+  const pal = ['#e05252','#4a90d9','#3dab7c','#d4922a','#7c6fcd','#d46a3a','#6aab3d','#c4527e','#1abc9c','#e67e22'];
+  return pal[h % pal.length];
 }
 
 function initials(name) {
-  return (name || '??').split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  return (name||'??').split(/[\s-]+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
 }
 
-function fmtPct(v) { return (v==null||isNaN(v)) ? '—' : v.toFixed(2)+'%'; }
+function fmtPct(v) { return (v==null||isNaN(v)) ? '—' : Number(v).toFixed(2)+'%'; }
 function fmtNum(n) {
-  if (n==null||isNaN(n)) return '—';
+  if (!n) return '—';
   if (n>=1e6) return (n/1e6).toFixed(2)+'M';
   if (n>=1e3) return Math.round(n/1000)+'k';
-  return Math.round(n)+'';
+  return String(Math.round(n));
 }
-function now() { return new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+function nowTime() { return new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
 
-// ════════════════════════════════════════════════════════
-// STATE
-// ════════════════════════════════════════════════════════
-const state = {
-  presidencial: null,
-  senado: null,
-  diputados: null,
-  onpeOnline: false,
-  lastUpdate: null,
-};
-
-// ════════════════════════════════════════════════════════
-// CSV PARSING
-// Formato ONPE esperado (columnas principales):
-//   PARTIDO, VOTOS, ACTAS_COMP, ACTAS_TOTAL [, ESCANOS]
-// La ONPE puede variar nombres; intentamos mapear flexiblemente
-// ════════════════════════════════════════════════════════
-function parseCSV(text) {
-  const result = Papa.parse(text, { header: true, skipEmptyLines: true, dynamicTyping: true });
-  const rows = result.data;
-  if (!rows.length) return null;
-
-  // Normalizar nombres de columna (quitar espacios, uppercase)
-  const normalize = s => s.trim().toUpperCase().replace(/\s+/g,'_');
-  const normed = rows.map(r => {
-    const o = {};
-    for (const [k,v] of Object.entries(r)) o[normalize(k)] = v;
-    return o;
-  });
-
-  // Intentar identificar columnas
-  const firstRow = normed[0];
-  const cols = Object.keys(firstRow);
-
-  const findCol = (...candidates) => candidates.find(c => cols.includes(c));
-
-  const colPartido  = findCol('PARTIDO','ORGANIZACION_POLITICA','ORGANIZACIÓN_POLITICA','ORG_POLITICA','NOMBRE_PARTIDO','PARTIDO_POLITICO','CANDIDATO','NOMBRE');
-  const colVotos    = findCol('VOTOS','TOTAL_VOTOS','VOTOS_VALIDOS','VOTOS_OBTENIDOS');
-  const colActComp  = findCol('ACTAS_COMP','ACTAS_COMPUTADAS','ACTAS_PROCESADAS','ACTAS_ESCRUTADAS');
-  const colActTotal = findCol('ACTAS_TOTAL','TOTAL_ACTAS','TOTAL_MESAS');
-  const colEscanos  = findCol('ESCANOS','ESCAÑOS','ASIENTOS','CURULES','SEATS');
-  const colPct      = findCol('PORCENTAJE','PCT','PORCENTAJE_VOTOS','POR100');
-
-  if (!colPartido || !colVotos) return null;
-
-  const partidos = normed
-    .filter(r => r[colPartido] && r[colVotos] != null)
-    .map(r => ({
-      partido:   String(r[colPartido]).trim(),
-      votos:     Number(r[colVotos]) || 0,
-      escanos:   colEscanos ? (Number(r[colEscanos]) || 0) : null,
-      pct:       colPct ? (Number(r[colPct]) || 0) : null,
-      actasComp: colActComp ? Number(r[colActComp]) : null,
-      actasTotal:colActTotal? Number(r[colActTotal]): null,
-    }))
-    .sort((a,b) => b.votos - a.votos);
-
-  // Calcular porcentajes si no vienen
-  const totalVotos = partidos.reduce((s,p)=>s+p.votos,0);
-  for (const p of partidos) {
-    if (p.pct == null) p.pct = totalVotos ? p.votos/totalVotos*100 : 0;
-  }
-
-  // Metadata de actas (tomar del primer partido que las tenga, o de la suma)
-  const withActas = partidos.find(p=>p.actasComp!=null&&p.actasTotal!=null);
-  const actasComp  = withActas ? withActas.actasComp  : null;
-  const actasTotal = withActas ? withActas.actasTotal : null;
-  const pctActas   = (actasComp && actasTotal) ? actasComp/actasTotal*100 : null;
-
-  return { partidos, totalVotos, actasComp, actasTotal, pctActas, timestamp: now() };
-}
-
-// ════════════════════════════════════════════════════════
-// HEMICYCLE DRAWING
-// ════════════════════════════════════════════════════════
+// ── Hemicycle ────────────────────────────────────────────────────────────────
 function drawHemicycle(svgId, partidos, totalSeats) {
   const svg = document.getElementById(svgId);
+  if (!svg) return;
   svg.innerHTML = '';
 
-  if (!partidos || !totalSeats) return;
+  // Calcular escaños por D'Hondt simplificado (sobre votos válidos)
+  const VALLA = 5;
+  const eligible = partidos.filter(p => p.pct >= VALLA);
+  if (!eligible.length) return;
 
-  // Asignar escaños (si no vienen del CSV, distribuir por votos)
-  let withSeats = partidos.filter(p=>p.escanos!=null&&p.escanos>0);
-  let seats;
-  if (withSeats.length > 0) {
-    seats = withSeats.map(p=>({ name:p.partido, n:p.escanos, color:partyColor(p.partido) }));
-  } else {
-    // Reparto proporcional simple (D'Hondt simplificado)
-    const totalV = partidos.reduce((s,p)=>s+p.votos,0);
-    const VALLA = 0.05;
-    const eligible = partidos.filter(p=>p.pct>=VALLA*100);
-    const eligV = eligible.reduce((s,p)=>s+p.votos,0);
-    seats = eligible.map(p=>({
-      name: p.partido,
-      n: Math.round(p.votos/eligV*totalSeats),
-      color: partyColor(p.partido)
-    }));
-    // Ajustar redondeo
-    const diff = totalSeats - seats.reduce((s,p)=>s+p.n,0);
-    if (seats.length && diff!==0) seats[0].n += diff;
-  }
+  const totalV = eligible.reduce((s,p) => s+p.votos, 0);
+  let seats = eligible.map(p => ({
+    name: p.nombre,
+    color: getColor(p.nombre),
+    n: Math.max(1, Math.round(p.votos / totalV * totalSeats)),
+  }));
+
+  // Ajustar al total exacto
+  let diff = totalSeats - seats.reduce((s,p) => s+p.n, 0);
+  seats.sort((a,b) => b.n-a.n);
+  for (let i=0; diff>0; i=(i+1)%seats.length, diff--) seats[i].n++;
+  for (let i=0; diff<0; i=(i+1)%seats.length, diff++) if (seats[i].n>1) seats[i].n--;
+
   seats = seats.filter(s=>s.n>0).sort((a,b)=>b.n-a.n);
 
-  // Build arc list
-  const CX=250, CY=260, R_OUT=220, R_IN=130, ROWS=3;
-  const GAP=0.012; // radians gap between parties
-
-  // Multiple rows
-  const rows = ROWS;
-  const radii = [];
-  for (let i=0;i<rows;i++) {
-    radii.push({ inner: R_IN + (R_OUT-R_IN)/rows*i, outer: R_IN + (R_OUT-R_IN)/rows*(i+1) - 2 });
+  const CX=250, CY=258, ROWS=3, GAP=0.014;
+  const R_OUT=220, R_IN=128;
+  const paths = [];
+  const rowRanges = [];
+  for (let r=0; r<ROWS; r++) {
+    rowRanges.push({
+      inner: R_IN + (R_OUT-R_IN)/ROWS*r,
+      outer: R_IN + (R_OUT-R_IN)/ROWS*(r+1) - 2,
+    });
   }
 
-  const totalN = seats.reduce((s,p)=>s+p.n,0);
-  const ARC_START = Math.PI; // left
-  const ARC_END   = 0;       // right
-  const ARC_SPAN  = Math.PI;
+  const seatsPerRow = Math.ceil(totalSeats/ROWS);
+  let sIdx=0, pIdx=0, pRem=seats[0]?.n||0;
 
-  // Distribute seats across rows (outer row has more seats)
-  // Simple: each row gets totalSeats/rows seats
-  const seatsPerRow = Math.ceil(totalN/rows);
+  for (let row=0; row<ROWS; row++) {
+    const {inner,outer} = rowRanges[row];
+    const rowN = Math.min(seatsPerRow, totalSeats-sIdx);
+    if (rowN<=0) break;
+    const anglePerSeat = Math.PI/rowN;
 
-  let seatIdx = 0;
-  let partyIdx = 0;
-  let partyRem = seats[0]?.n || 0;
-
-  const paths = [];
-  for (let row=0; row<rows; row++) {
-    const { inner, outer } = radii[row];
-    const rowSeats = Math.min(seatsPerRow, totalN - seatIdx);
-    if (rowSeats <= 0) break;
-    let angle = ARC_START;
-    const anglePerSeat = ARC_SPAN / rowSeats;
-
-    for (let s=0; s<rowSeats; s++) {
-      if (partyIdx >= seats.length) break;
-      const a1 = angle + GAP/2;
-      const a2 = angle + anglePerSeat - GAP/2;
-      const color = seats[partyIdx].color;
-
-      // Arc path
-      const x1 = CX + outer*Math.cos(a1), y1 = CY - outer*Math.sin(a1);
-      const x2 = CX + outer*Math.cos(a2), y2 = CY - outer*Math.sin(a2);
-      const x3 = CX + inner*Math.cos(a2), y3 = CY - inner*Math.sin(a2);
-      const x4 = CX + inner*Math.cos(a1), y4 = CY - inner*Math.sin(a1);
-      const la = (a2-a1) > Math.PI ? 1 : 0;
-
-      const d = `M${x1.toFixed(1)},${y1.toFixed(1)} A${outer},${outer} 0 ${la},0 ${x2.toFixed(1)},${y2.toFixed(1)} L${x3.toFixed(1)},${y3.toFixed(1)} A${inner},${inner} 0 ${la},1 ${x4.toFixed(1)},${y4.toFixed(1)} Z`;
-      paths.push(`<path d="${d}" fill="${color}" opacity="0.85"/>`);
-
-      angle += anglePerSeat;
-      seatIdx++;
-      partyRem--;
-      if (partyRem <= 0) {
-        partyIdx++;
-        partyRem = seats[partyIdx]?.n || 0;
-      }
+    for (let s=0; s<rowN; s++) {
+      if (pIdx>=seats.length) break;
+      const a1 = Math.PI + s*anglePerSeat + GAP/2;
+      const a2 = Math.PI + (s+1)*anglePerSeat - GAP/2;
+      const color = seats[pIdx].color;
+      const x1=CX+outer*Math.cos(a1), y1=CY+outer*Math.sin(a1);
+      const x2=CX+outer*Math.cos(a2), y2=CY+outer*Math.sin(a2);
+      const x3=CX+inner*Math.cos(a2), y3=CY+inner*Math.sin(a2);
+      const x4=CX+inner*Math.cos(a1), y4=CY+inner*Math.sin(a1);
+      const la=(a2-a1)>Math.PI?1:0;
+      const d=`M${x1.toFixed(1)},${y1.toFixed(1)} A${outer},${outer} 0 ${la},1 ${x2.toFixed(1)},${y2.toFixed(1)} L${x3.toFixed(1)},${y3.toFixed(1)} A${inner},${inner} 0 ${la},0 ${x4.toFixed(1)},${y4.toFixed(1)} Z`;
+      paths.push(`<path d="${d}" fill="${color}" opacity="0.88"/>`);
+      sIdx++; pRem--;
+      if (pRem<=0) { pIdx++; pRem=seats[pIdx]?.n||0; }
     }
   }
 
-  // Center label
   const proclaimed = seats.reduce((s,p)=>s+p.n,0);
-  paths.push(`<text x="250" y="248" text-anchor="middle" font-size="28" font-weight="700" fill="#ececec" font-family="system-ui">${proclaimed}</text>`);
-  paths.push(`<text x="250" y="268" text-anchor="middle" font-size="11" fill="#666" font-family="system-ui">escaños</text>`);
-
+  paths.push(`<text x="250" y="242" text-anchor="middle" font-size="30" font-weight="700" fill="#ececec" font-family="system-ui">${proclaimed}</text>`);
+  paths.push(`<text x="250" y="260" text-anchor="middle" font-size="11" fill="#666" font-family="system-ui">escaños proyectados</text>`);
   svg.innerHTML = paths.join('');
 }
 
-// ════════════════════════════════════════════════════════
-// RENDER FUNCTIONS
-// ════════════════════════════════════════════════════════
+// ── Render presidencial ──────────────────────────────────────────────────────
 function renderPresidencial(data) {
-  if (!data) { document.getElementById('pres-list').innerHTML='<div class="loading">Sin datos aún…</div>'; return; }
+  if (!data || !data.participantes) {
+    document.getElementById('pres-list').innerHTML='<div class="loading">Sin datos aún…</div>';
+    return;
+  }
 
-  const { partidos, totalVotos, pctActas, timestamp } = data;
-  const maxPct = Math.max(...partidos.map(p=>p.pct));
+  const partic = data.participantes;
+  const totales = data.totales;
 
-  document.getElementById('pres-pct-label').textContent = fmtPct(pctActas);
-  document.getElementById('pres-prog').style.width = Math.min(pctActas||0, 100)+'%';
-  document.getElementById('pres-ts').textContent = 'Actualizado: '+(timestamp||now());
-  document.getElementById('s-pres-pct').textContent = fmtPct(pctActas);
+  // Extraer porcentaje de actas de totales
+  let pctActas = null, actasComp = null, actasTotal = null;
+  if (totales) {
+    // totales puede ser array o objeto
+    const t = Array.isArray(totales) ? totales[0] : totales;
+    if (t) {
+      actasComp  = t.actasComputadas || t.actas_computadas || t.actasComp;
+      actasTotal = t.totalActas || t.total_actas || t.actasTotal;
+      pctActas   = t.porcentajeActas || t.porcentaje_actas;
+      if (!pctActas && actasComp && actasTotal) pctActas = actasComp/actasTotal*100;
+    }
+  }
 
-  const html = partidos.map((p,i)=>{
-    const color = partyColor(p.partido);
-    const ini = initials(p.partido);
-    const votos = Math.round(p.pct/100*totalVotos);
+  const sorted = [...partic].sort((a,b) => b.porcentajeVotosValidos - a.porcentajeVotosValidos);
+  const maxPct = sorted[0]?.porcentajeVotosValidos || 1;
+
+  const html = sorted.map((p,i) => {
+    const color = getColor(p.nombreAgrupacionPolitica);
+    const ini = initials(p.nombreAgrupacionPolitica);
+    const pct = p.porcentajeVotosValidos;
+    const votos = p.totalVotosValidos;
     const b1 = i===0 ? '<span class="badge badge-1">1°</span>' : '';
     const b2 = i===1 ? '<span class="badge badge-2">2°</span>' : '';
-    const b2v = (i<2&&pctActas>5) ? '<span class="badge badge-2v">→ balotaje?</span>' : '';
+    const b2v = (i<2 && pctActas>2) ? '<span class="badge badge-2v">→ balotaje?</span>' : '';
     return `<div class="cand-row">
       <span class="crank">${i+1}</span>
       <div class="avt" style="background:${color}22;color:${color}">${ini}</div>
       <div class="cinfo">
-        <div class="cname">${p.partido} ${b1}${b2}${b2v}</div>
-        <div class="cparty">${fmtPct(p.pct)} de votos válidos</div>
-        <div class="cbar-bg"><div class="cbar-fill" style="width:${maxPct?p.pct/maxPct*100:0}%;background:${color}"></div></div>
+        <div class="cname">${p.nombreAgrupacionPolitica} ${b1}${b2}${b2v}</div>
+        <div class="cparty">${p.nombreCandidato||''}</div>
+        <div class="cbar-bg"><div class="cbar-fill" style="width:${(pct/maxPct*100).toFixed(1)}%;background:${color}"></div></div>
       </div>
       <div class="cnum">
-        <div class="cpct" style="color:${color}">${fmtPct(p.pct)}</div>
-        <div class="cvot">${pctActas>0?fmtNum(votos):'—'}</div>
+        <div class="cpct" style="color:${color}">${fmtPct(pct)}</div>
+        <div class="cvot">${fmtNum(votos)} votos</div>
       </div>
     </div>`;
   }).join('');
+
   document.getElementById('pres-list').innerHTML = html;
+  document.getElementById('pres-pct-label').textContent = pctActas ? fmtPct(pctActas) : '—';
+  document.getElementById('pres-prog').style.width = Math.min(pctActas||0, 100)+'%';
+  document.getElementById('pres-ts').textContent = 'Actualizado: '+nowTime();
+  document.getElementById('s-pres-pct').textContent = pctActas ? fmtPct(pctActas) : '—';
 }
 
+// ── Render congreso ──────────────────────────────────────────────────────────
 function renderCongreso(tipo, data) {
-  const tableId = tipo==='senado' ? 'sen-table' : 'dip-table';
-  const progId  = tipo==='senado' ? 'sen-prog'  : 'dip-prog';
+  const tableId = tipo==='senado' ? 'sen-table'     : 'dip-table';
+  const progId  = tipo==='senado' ? 'sen-prog'      : 'dip-prog';
   const pctId   = tipo==='senado' ? 'sen-pct-label' : 'dip-pct-label';
-  const tsId    = tipo==='senado' ? 'sen-ts'    : 'dip-ts';
-  const statId  = tipo==='senado' ? 's-sen-pct' : 's-dip-pct';
+  const tsId    = tipo==='senado' ? 'sen-ts'        : 'dip-ts';
+  const statId  = tipo==='senado' ? 's-sen-pct'     : 's-dip-pct';
   const hemId   = tipo==='senado' ? 'sen-hemicycle' : 'dip-hemicycle';
   const totalSeats = tipo==='senado' ? 60 : 130;
-  const VALLA = 5; // 5%
+  const VALLA = 5;
 
-  if (!data) {
+  if (!data || !data.participantes) {
     document.getElementById(tableId).innerHTML='<div class="loading">Sin datos aún…</div>';
     return;
   }
 
-  const { partidos, pctActas, timestamp } = data;
+  const partic = data.participantes;
+  const totales = data.totales;
 
-  document.getElementById(pctId).textContent = fmtPct(pctActas);
-  document.getElementById(progId).style.width = Math.min(pctActas||0,100)+'%';
-  document.getElementById(tsId).textContent = 'Actualizado: '+(timestamp||now());
-  document.getElementById(statId).textContent = fmtPct(pctActas);
+  let pctActas = null;
+  if (totales) {
+    const t = Array.isArray(totales) ? totales[0] : totales;
+    if (t) {
+      pctActas = t.porcentajeActas || t.porcentaje_actas;
+      if (!pctActas && t.actasComputadas && t.totalActas) pctActas = t.actasComputadas/t.totalActas*100;
+    }
+  }
 
-  // Draw hemicycle
-  drawHemicycle(hemId, partidos, totalSeats);
+  const sorted = [...partic].sort((a,b) => b.porcentajeVotosValidos - a.porcentajeVotosValidos);
+  const maxPct = sorted[0]?.porcentajeVotosValidos || 1;
 
-  const maxPct = Math.max(...partidos.map(p=>p.pct));
-  const rows = partidos.map(p => {
-    const color = partyColor(p.partido);
-    const superaValla = p.pct >= VALLA;
-    const escanos = p.escanos != null ? p.escanos : '—';
+  // Construir lista para hemicycle
+  const partList = sorted.map(p => ({
+    nombre: p.nombreAgrupacionPolitica,
+    votos: p.totalVotosValidos,
+    pct: p.porcentajeVotosValidos,
+  }));
+  drawHemicycle(hemId, partList, totalSeats);
+
+  const rows = sorted.map(p => {
+    const color = getColor(p.nombreAgrupacionPolitica);
+    const pct = p.porcentajeVotosValidos;
+    const superaValla = pct >= VALLA;
     const bv = superaValla
       ? '<span class="badge badge-valla">✓ valla</span>'
       : '<span class="badge badge-novalla">bajo valla</span>';
-    const rowClass = superaValla ? '' : ' below-valla';
-    return `<tr class="${rowClass}">
-      <td><div class="pname-cell"><span class="p-swatch" style="background:${color}"></span>${p.partido}</div></td>
+    return `<tr class="${superaValla?'':'below-valla'}">
+      <td><div class="pname-cell"><span class="p-swatch" style="background:${color}"></span>${p.nombreAgrupacionPolitica}</div></td>
       <td>${bv}</td>
-      <td class="bar-cell"><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${maxPct?p.pct/maxPct*100:0}%;background:${color}"></div></div></td>
-      <td>${fmtPct(p.pct)}</td>
-      <td><span class="escanos-num" style="color:${color}">${escanos}</span></td>
+      <td class="bar-cell"><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${(pct/maxPct*100).toFixed(1)}%;background:${color}"></div></div></td>
+      <td>${fmtPct(pct)}</td>
+      <td><span class="escanos-num" style="color:${color}">${fmtNum(p.totalVotosValidos)}</span></td>
     </tr>`;
   }).join('');
 
   document.getElementById(tableId).innerHTML = `
     <table class="ptable">
-      <thead><tr>
-        <th>Partido</th>
-        <th>Valla</th>
-        <th class="bar-cell">Votos</th>
-        <th>%</th>
-        <th>Escaños</th>
-      </tr></thead>
+      <thead><tr><th>Partido</th><th>Valla</th><th class="bar-cell">Votos</th><th>%</th><th>Votos</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
+
+  document.getElementById(pctId).textContent = pctActas ? fmtPct(pctActas) : '—';
+  document.getElementById(progId).style.width = Math.min(pctActas||0,100)+'%';
+  document.getElementById(tsId).textContent = 'Actualizado: '+nowTime();
+  document.getElementById(statId).textContent = pctActas ? fmtPct(pctActas) : '—';
 }
 
-function renderAll() {
-  renderPresidencial(state.presidencial);
-  renderCongreso('senado', state.senado);
-  renderCongreso('diputados', state.diputados);
-  updateHeader();
-}
-
-function updateHeader() {
-  const t = now();
-  document.getElementById('s-time').textContent = t;
-  document.getElementById('last-update-hdr').textContent = 'Última sync: '+t;
-  state.lastUpdate = t;
-
+// ── Header & status ──────────────────────────────────────────────────────────
+function updateHeader(onpeOnline) {
+  document.getElementById('s-time').textContent = nowTime();
+  document.getElementById('last-update-hdr').textContent = 'Última sync: '+nowTime();
   const pill = document.getElementById('status-pill');
   const dot  = document.getElementById('status-dot');
   const txt  = document.getElementById('status-text');
-  if (state.onpeOnline) {
-    pill.className = 'live-pill';
-    dot.className  = 'dot dot-live';
-    txt.textContent = 'ONPE en vivo';
+  if (onpeOnline) {
+    pill.className='live-pill'; dot.className='dot dot-live'; txt.textContent='ONPE en vivo';
     document.getElementById('alert-box').classList.remove('show');
   } else {
-    pill.className = 'offline-pill';
-    dot.className  = 'dot dot-off';
-    txt.textContent = 'Esperando ONPE';
+    pill.className='offline-pill'; dot.className='dot dot-off'; txt.textContent='Esperando ONPE';
     document.getElementById('alert-box').classList.add('show');
   }
 }
 
-// ════════════════════════════════════════════════════════
-// FETCH FROM BACKEND
-// ════════════════════════════════════════════════════════
-async function fetchStatus() {
-  try {
-    const r = await fetch('/api/status');
-    const d = await r.json();
-    state.onpeOnline = d.onpeOnline;
-    return d;
-  } catch { return null; }
-}
-
-async function fetchCSV(tipo) {
-  try {
-    const r = await fetch('/api/csv/'+tipo);
-    if (!r.ok) return null;
-    const text = await r.text();
-    return parseCSV(text);
-  } catch { return null; }
-}
-
+// ── Fetch & render ───────────────────────────────────────────────────────────
 async function refresh() {
   const btn = document.getElementById('btn-refresh');
-  btn.disabled = true;
-  btn.textContent = 'Actualizando…';
+  btn.disabled=true; btn.textContent='Actualizando…';
 
-  const status = await fetchStatus();
-  if (status?.hasData?.presidencial) state.presidencial = await fetchCSV('presidencial');
-  if (status?.hasData?.senado)       state.senado       = await fetchCSV('senado');
-  if (status?.hasData?.diputados)    state.diputados    = await fetchCSV('diputados');
+  try {
+    const status = await fetch('/api/status').then(r=>r.json());
+    updateHeader(status.onpeOnline);
 
-  renderAll();
-  btn.disabled = false;
-  btn.textContent = 'Forzar actualización';
+    if (status.hasData.presidencial) {
+      const d = await fetch('/api/datos/presidencial').then(r=>r.json());
+      renderPresidencial(d);
+    }
+    if (status.hasData.senado) {
+      const d = await fetch('/api/datos/senado').then(r=>r.json());
+      renderCongreso('senado', d);
+    }
+    if (status.hasData.diputados) {
+      const d = await fetch('/api/datos/diputados').then(r=>r.json());
+      renderCongreso('diputados', d);
+    }
+  } catch(e) {
+    console.error('Error refreshing:', e);
+  }
+
+  btn.disabled=false; btn.textContent='Actualizar ahora';
 }
 
 function manualRefresh() { refresh(); }
 
-// ════════════════════════════════════════════════════════
-// CSV FILE UPLOAD
-// ════════════════════════════════════════════════════════
-function handleFile(event, tipo) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const data = parseCSV(e.target.result);
-    if (!data) { alert('No se pudo parsear el CSV. Verifica el formato.'); return; }
-    state[tipo] = data;
-    state.onpeOnline = true;
-    renderAll();
-    // Switch to the relevant tab
-    if (tipo==='presidencial') showTab('presidencial');
-    else if (tipo==='senado')  showTab('senado');
-    else                       showTab('diputados');
-  };
-  reader.readAsText(file, 'utf-8');
-}
-
-// ════════════════════════════════════════════════════════
-// TAB NAVIGATION
-// ════════════════════════════════════════════════════════
 function showTab(name) {
-  const names = ['presidencial','senado','diputados','datos'];
+  const names = ['presidencial','senado','diputados'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',names[i]===name));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
 }
 
-// ════════════════════════════════════════════════════════
-// INIT & AUTO-REFRESH
-// ════════════════════════════════════════════════════════
 refresh();
-setInterval(refresh, 5*60*1000); // cada 5 minutos
+setInterval(refresh, 5*60*1000);
 </script>
 </body>
 </html>
