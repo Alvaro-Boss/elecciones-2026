@@ -112,6 +112,36 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+
+/* ── Cusco distrital ── */
+.cusco-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:1rem}
+.cusco-search{flex:1;min-width:180px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);padding:7px 12px;font-size:13px;outline:none}
+.cusco-search:focus{border-color:var(--red)}
+.cusco-select{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);padding:7px 10px;font-size:13px;outline:none;cursor:pointer}
+.btn-scrape{font-size:12px;padding:7px 14px;background:rgba(224,82,82,0.15);border:0.5px solid rgba(224,82,82,0.35);border-radius:var(--radius-sm);color:var(--red);cursor:pointer;font-weight:600;transition:all 0.15s;white-space:nowrap}
+.btn-scrape:hover{background:rgba(224,82,82,0.25)}
+.btn-scrape:disabled{opacity:0.4;cursor:default}
+.btn-csv{font-size:12px;padding:7px 14px;background:rgba(61,171,124,0.12);border:0.5px solid rgba(61,171,124,0.3);border-radius:var(--radius-sm);color:#3dab7c;cursor:pointer;font-weight:600;transition:all 0.15s;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.btn-csv:hover{background:rgba(61,171,124,0.22)}
+.dist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}
+@media(max-width:680px){.dist-grid{grid-template-columns:1fr}}
+.dist-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px}
+.dist-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.dist-name{font-size:13px;font-weight:600}
+.dist-prov{font-size:10px;color:var(--text3);margin-top:2px}
+.dist-actas{font-size:10px;color:var(--text3);font-family:var(--mono);text-align:right}
+.dist-row{display:flex;align-items:center;gap:8px;padding:3px 0}
+.dist-rank{font-size:10px;color:var(--text3);width:14px;text-align:center;flex-shrink:0;font-family:var(--mono)}
+.dist-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.dist-pname{font-size:11px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dist-pct{font-size:12px;font-weight:700;font-family:var(--mono);min-width:42px;text-align:right}
+.dist-bar-bg{background:var(--bg4);border-radius:2px;height:3px;overflow:hidden;margin-top:2px}
+.dist-bar-fill{height:100%;border-radius:2px;transition:width 0.8s ease}
+.cusco-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem}
+@media(max-width:560px){.cusco-stats{grid-template-columns:1fr 1fr}}
+.scraping-msg{background:rgba(212,146,42,0.08);border:1px solid rgba(212,146,42,0.2);border-radius:var(--radius);padding:14px;font-size:12px;color:#d4a252;text-align:center;line-height:1.8}
+.provincia-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;padding:8px 0 4px;grid-column:1/-1;border-top:0.5px solid var(--border);margin-top:4px}
+.provincia-label:first-child{border-top:none;margin-top:0}
 </style>
 </head>
 <body>
@@ -144,6 +174,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   <button class="tab" onclick="showTab('tendencia')">Tendencia en tiempo real</button>
   <button class="tab" onclick="showTab('senado')">Senado (60)</button>
   <button class="tab" onclick="showTab('diputados')">Diputados (130)</button>
+  <button class="tab" onclick="showTab('cusco')">📍 Cusco distrital</button>
 </div>
 
 <!-- PRESIDENCIAL -->
@@ -212,6 +243,41 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     <div class="hemicycle-wrap"><svg id="dip-hemicycle" viewBox="0 0 500 270" xmlns="http://www.w3.org/2000/svg"></svg></div>
     <div id="dip-table"><div class="loading">Esperando datos de ONPE…</div></div>
     <div class="nota">Elegidos en <strong>27 circunscripciones regionales</strong>. Valla: <strong>5%</strong> de votos válidos.</div>
+  </div>
+</div>
+
+<!-- CUSCO DISTRITAL -->
+<div id="tab-cusco" class="section">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Cusco — Resultados presidenciales por distrito</div>
+      <span class="card-ts" id="cusco-ts">—</span>
+    </div>
+    <div class="cusco-stats">
+      <div class="stat"><div class="stat-label">Distritos</div><div class="stat-val" id="cusco-total-dist">—</div><div class="stat-sub">con datos</div></div>
+      <div class="stat"><div class="stat-label">Provincias</div><div class="stat-val">13</div><div class="stat-sub">en Cusco</div></div>
+      <div class="stat"><div class="stat-label">Estado</div><div class="stat-val" style="font-size:13px" id="cusco-estado">—</div><div class="stat-sub">scraping ONPE</div></div>
+    </div>
+    <div class="cusco-toolbar">
+      <input class="cusco-search" id="cusco-search" type="text" placeholder="🔍 Buscar distrito…" oninput="filterCusco()">
+      <select class="cusco-select" id="cusco-prov-filter" onchange="filterCusco()">
+        <option value="">Todas las provincias</option>
+        <option>Cusco</option><option>Acomayo</option><option>Anta</option>
+        <option>Calca</option><option>Canas</option><option>Canchis</option>
+        <option>Chumbivilcas</option><option>Espinar</option><option>La Convención</option>
+        <option>Paruro</option><option>Paucartambo</option><option>Quispicanchi</option>
+        <option>Urubamba</option>
+      </select>
+      <button class="btn-scrape" id="btn-scrape" onclick="triggerScrape()">⟳ Actualizar datos</button>
+      <a class="btn-csv" id="btn-csv" href="/api/cusco/csv" download="cusco_distrital_2026.csv">⬇ CSV</a>
+    </div>
+    <div id="cusco-content">
+      <div class="scraping-msg">
+        Haz clic en <strong>⟳ Actualizar datos</strong> para iniciar el scraping distrital de Cusco.<br>
+        <span style="font-size:11px;color:var(--text3)">El proceso consulta ~110 distritos a la API de la ONPE. Puede tomar 1-3 minutos.</span>
+      </div>
+    </div>
+    <div class="nota">Datos presidenciales (primera vuelta) a nivel de distrito. Muestra los <strong>6 partidos con más votos</strong> en cada distrito. Fuente: ONPE.</div>
   </div>
 </div>
 
@@ -493,11 +559,131 @@ async function refresh(){
 
 function manualRefresh(){refresh();}
 function showTab(name){
-  const names=['presidencial','tendencia','senado','diputados'];
+  const names=['presidencial','tendencia','senado','diputados','cusco'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',names[i]===name));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='tendencia') refresh();
+  if(name==='cusco') loadCusco();
+}
+
+// ── Cusco distrital ───────────────────────────────────────────────────────────
+let cuscoData = [];
+
+async function loadCusco() {
+  try {
+    const res = await fetch('/api/cusco/distritos').then(r=>r.json());
+    if (res.ok && res.distritos && res.distritos.length > 0) {
+      cuscoData = res.distritos;
+      renderCusco(cuscoData);
+      document.getElementById('cusco-ts').textContent = 'Actualizado: ' + (res.lastFetch ? new Date(res.lastFetch).toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit',timeZone:'America/Lima'}) : '—');
+      document.getElementById('cusco-total-dist').textContent = res.total;
+      document.getElementById('cusco-estado').textContent = res.online ? '✓ OK' : '—';
+    }
+  } catch(e) { console.error('[Cusco]', e); }
+}
+
+async function triggerScrape() {
+  const btn = document.getElementById('btn-scrape');
+  btn.disabled = true;
+  btn.textContent = '⏳ Scraping…';
+  document.getElementById('cusco-content').innerHTML = `
+    <div class="scraping-msg">
+      ⏳ <strong>Consultando la API de la ONPE…</strong><br>
+      Procesando ~110 distritos de las 13 provincias de Cusco.<br>
+      <span style="font-size:11px;color:var(--text3)">Esto puede tardar 1-3 minutos. Esta página se actualizará automáticamente.</span>
+    </div>`;
+  document.getElementById('cusco-estado').textContent = '⏳ scraping';
+
+  try {
+    await fetch('/api/cusco/refresh', { method: 'POST' });
+    // Polling cada 8s para ver si ya terminó
+    let intentos = 0;
+    const poll = setInterval(async () => {
+      intentos++;
+      const st = await fetch('/api/cusco/status').then(r=>r.json());
+      if (st.totalDistritos > 0) {
+        clearInterval(poll);
+        await loadCusco();
+        btn.disabled = false;
+        btn.textContent = '⟳ Actualizar datos';
+      } else if (intentos > 30) { // máx 4 min
+        clearInterval(poll);
+        document.getElementById('cusco-content').innerHTML = `<div class="scraping-msg" style="border-color:rgba(224,82,82,0.3);color:var(--red)">⚠️ La ONPE no respondió o los datos aún no están disponibles.<br><span style="font-size:11px">Intenta de nuevo en unos minutos.</span></div>`;
+        btn.disabled = false;
+        btn.textContent = '⟳ Reintentar';
+      }
+    }, 8000);
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '⟳ Reintentar';
+  }
+}
+
+function filterCusco() {
+  const q = document.getElementById('cusco-search').value.toLowerCase();
+  const prov = document.getElementById('cusco-prov-filter').value.toLowerCase();
+  const filtered = cuscoData.filter(d => {
+    const matchQ = !q || d.distrito.toLowerCase().includes(q) || d.provincia.toLowerCase().includes(q);
+    const matchP = !prov || d.provincia.toLowerCase().includes(prov);
+    return matchQ && matchP;
+  });
+  renderCusco(filtered);
+}
+
+function renderCusco(distritos) {
+  const container = document.getElementById('cusco-content');
+  if (!distritos || distritos.length === 0) {
+    container.innerHTML = `<div class="scraping-msg">No hay distritos que coincidan con el filtro.</div>`;
+    return;
+  }
+
+  // Agrupar por provincia
+  const porProv = {};
+  for (const d of distritos) {
+    if (!porProv[d.provincia]) porProv[d.provincia] = [];
+    porProv[d.provincia].push(d);
+  }
+
+  let html = '<div class="dist-grid">';
+  for (const [prov, dists] of Object.entries(porProv)) {
+    html += `<div class="provincia-label">📍 ${prov} (${dists.length} distritos)</div>`;
+    for (const d of dists) {
+      const partic = (d.participantes || []).slice(0, 6);
+      const maxPct = partic[0]?.pct || 1;
+      const actas = d.pctActas != null ? d.pctActas.toFixed(1) + '% actas' : 'sin datos';
+      let rows = partic.map((p, i) => {
+        const color = getColor(p.partido);
+        const barW = ((p.pct / maxPct) * 100).toFixed(1);
+        const short = p.partido.length > 28 ? p.partido.substring(0,26) + '…' : p.partido;
+        return `<div class="dist-row">
+          <span class="dist-rank">${i+1}</span>
+          <span class="dist-dot" style="background:${color}"></span>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span class="dist-pname" title="${p.partido}">${short}</span>
+              <span class="dist-pct" style="color:${color}">${p.pct != null ? p.pct.toFixed(1)+'%' : '—'}</span>
+            </div>
+            <div class="dist-bar-bg"><div class="dist-bar-fill" style="width:${barW}%;background:${color}"></div></div>
+          </div>
+        </div>`;
+      }).join('');
+      if (!rows) rows = '<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin datos de participantes</div>';
+
+      html += `<div class="dist-card">
+        <div class="dist-header">
+          <div>
+            <div class="dist-name">${d.distrito}</div>
+            <div class="dist-prov">${d.provincia} · ${d.ubigeo}</div>
+          </div>
+          <div class="dist-actas">${actas}</div>
+        </div>
+        ${rows}
+      </div>`;
+    }
+  }
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 refresh();
