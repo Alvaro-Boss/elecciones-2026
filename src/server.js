@@ -198,13 +198,20 @@ async function fetchONPE(tipo) {
 }
 
 // ── Fetch un distrito ─────────────────────────────────────────────────────────
+// URL real descubierta via DevTools:
+// /participantes?idEleccion=10&tipoFiltro=ubigeo_nivel_03&idAmbitoGeografico=1
+//   &idUbigeoDepartamento=080000&idUbigeoProvincia=080100&idUbigeoDistrito=080101
 async function fetchDistrito({ ubigeo, distrito, provincia }) {
+  // ubigeo = '080101' → depto='080000', prov='080100', dist='080101'
+  const dep  = ubigeo.slice(0, 2) + '0000';
+  const prov = ubigeo.slice(0, 4) + '00';
+  const dist = ubigeo;
+  const qs = `idEleccion=${ELECCIONES.presidencial}&tipoFiltro=ubigeo_nivel_03&idAmbitoGeografico=1`
+           + `&idUbigeoDepartamento=${dep}&idUbigeoProvincia=${prov}&idUbigeoDistrito=${dist}`;
   try {
     const [totRes, partRes] = await Promise.all([
-      fetch(`${BASE}/totales?idEleccion=${ELECCIONES.presidencial}&tipoFiltro=distrito&codigoUbigeo=${ubigeo}`,
-            { headers: HEADERS, timeout: 8000 }),
-      fetch(`${BASE}/participantes?idEleccion=${ELECCIONES.presidencial}&tipoFiltro=distrito&codigoUbigeo=${ubigeo}`,
-            { headers: HEADERS, timeout: 8000 }),
+      fetch(`${BASE}/totales?${qs}`,       { headers: HEADERS, timeout: 8000 }),
+      fetch(`${BASE}/participantes?${qs}`, { headers: HEADERS, timeout: 8000 }),
     ]);
     if (!totRes.ok || !partRes.ok) return null;
     const tot  = await totRes.json();
