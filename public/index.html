@@ -269,7 +269,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         <option>Urubamba</option>
       </select>
       <button class="btn-scrape" id="btn-scrape" onclick="triggerScrape()">⟳ Actualizar datos</button>
-      <a class="btn-csv" id="btn-csv" href="/api/cusco/csv" download="cusco_distrital_2026.csv">⬇ CSV</a>
+      <button class="btn-csv" id="btn-csv" onclick="downloadCsv()">⬇ CSV</button>
     </div>
     <div id="cusco-content">
       <div class="scraping-msg">
@@ -567,57 +567,157 @@ function showTab(name){
   if(name==='cusco') loadCusco();
 }
 
-// ── Cusco distrital ───────────────────────────────────────────────────────────
-let cuscoData = [];
+// ── Cusco distrital — fetch directo desde el navegador a la ONPE ──────────────
+const ONPE_BASE = 'https://resultadoelectoral.onpe.gob.pe/presentacion-backend/resumen-general';
+const ID_PRES = '10';
 
-async function loadCusco() {
+const DISTRITOS_CUSCO = [
+  {u:'080101',d:'Cusco',p:'Cusco'},{u:'080102',d:'Ccorca',p:'Cusco'},{u:'080103',d:'Poroy',p:'Cusco'},
+  {u:'080104',d:'San Jerónimo',p:'Cusco'},{u:'080105',d:'San Sebastián',p:'Cusco'},
+  {u:'080106',d:'Santiago',p:'Cusco'},{u:'080107',d:'Saylla',p:'Cusco'},{u:'080108',d:'Wanchaq',p:'Cusco'},
+  {u:'080201',d:'Acomayo',p:'Acomayo'},{u:'080202',d:'Acopia',p:'Acomayo'},{u:'080203',d:'Acos',p:'Acomayo'},
+  {u:'080204',d:'Mosoc Llacta',p:'Acomayo'},{u:'080205',d:'Pomacanchi',p:'Acomayo'},
+  {u:'080206',d:'Rondocan',p:'Acomayo'},{u:'080207',d:'Sangarará',p:'Acomayo'},
+  {u:'080301',d:'Anta',p:'Anta'},{u:'080302',d:'Ancahuasi',p:'Anta'},{u:'080303',d:'Cachimayo',p:'Anta'},
+  {u:'080304',d:'Chinchaypujio',p:'Anta'},{u:'080305',d:'Huarocondo',p:'Anta'},
+  {u:'080306',d:'Limatambo',p:'Anta'},{u:'080307',d:'Mollepata',p:'Anta'},
+  {u:'080308',d:'Pucyura',p:'Anta'},{u:'080309',d:'Zurite',p:'Anta'},
+  {u:'080401',d:'Calca',p:'Calca'},{u:'080402',d:'Coya',p:'Calca'},{u:'080403',d:'Lamay',p:'Calca'},
+  {u:'080404',d:'Lares',p:'Calca'},{u:'080405',d:'Pisac',p:'Calca'},
+  {u:'080406',d:'San Salvador',p:'Calca'},{u:'080407',d:'Taray',p:'Calca'},{u:'080408',d:'Yanatile',p:'Calca'},
+  {u:'080501',d:'Yanaoca',p:'Canas'},{u:'080502',d:'Checca',p:'Canas'},{u:'080503',d:'Kunturkanki',p:'Canas'},
+  {u:'080504',d:'Langui',p:'Canas'},{u:'080505',d:'Layo',p:'Canas'},{u:'080506',d:'Pampamarca',p:'Canas'},
+  {u:'080507',d:'Quehue',p:'Canas'},{u:'080508',d:'Túpac Amaru',p:'Canas'},
+  {u:'080601',d:'Sicuani',p:'Canchis'},{u:'080602',d:'Checacupe',p:'Canchis'},
+  {u:'080603',d:'Combapata',p:'Canchis'},{u:'080604',d:'Marangani',p:'Canchis'},
+  {u:'080605',d:'Pitumarca',p:'Canchis'},{u:'080606',d:'San Pablo',p:'Canchis'},
+  {u:'080607',d:'San Pedro',p:'Canchis'},{u:'080608',d:'Tinta',p:'Canchis'},
+  {u:'080701',d:'Santo Tomás',p:'Chumbivilcas'},{u:'080702',d:'Capacmarca',p:'Chumbivilcas'},
+  {u:'080703',d:'Chamaca',p:'Chumbivilcas'},{u:'080704',d:'Colquemarca',p:'Chumbivilcas'},
+  {u:'080705',d:'Livitaca',p:'Chumbivilcas'},{u:'080706',d:'Llusco',p:'Chumbivilcas'},
+  {u:'080707',d:'Quiñota',p:'Chumbivilcas'},{u:'080708',d:'Velille',p:'Chumbivilcas'},
+  {u:'080801',d:'Espinar',p:'Espinar'},{u:'080802',d:'Condoroma',p:'Espinar'},
+  {u:'080803',d:'Coporaque',p:'Espinar'},{u:'080804',d:'Ocoruro',p:'Espinar'},
+  {u:'080805',d:'Pallpata',p:'Espinar'},{u:'080806',d:'Pichigua',p:'Espinar'},
+  {u:'080807',d:'Suyckutambo',p:'Espinar'},{u:'080808',d:'Alto Pichigua',p:'Espinar'},
+  {u:'080901',d:'Santa Ana',p:'La Convención'},{u:'080902',d:'Echarate',p:'La Convención'},
+  {u:'080903',d:'Huayopata',p:'La Convención'},{u:'080904',d:'Maranura',p:'La Convención'},
+  {u:'080905',d:'Ocobamba',p:'La Convención'},{u:'080906',d:'Quellouno',p:'La Convención'},
+  {u:'080907',d:'Kimbiri',p:'La Convención'},{u:'080908',d:'Santa Teresa',p:'La Convención'},
+  {u:'080909',d:'Vilcabamba',p:'La Convención'},{u:'080910',d:'Pichari',p:'La Convención'},
+  {u:'081001',d:'Paruro',p:'Paruro'},{u:'081002',d:'Accha',p:'Paruro'},{u:'081003',d:'Ccapi',p:'Paruro'},
+  {u:'081004',d:'Colcha',p:'Paruro'},{u:'081005',d:'Huanoquite',p:'Paruro'},
+  {u:'081006',d:'Omacha',p:'Paruro'},{u:'081007',d:'Paccaritambo',p:'Paruro'},
+  {u:'081008',d:'Pillpinto',p:'Paruro'},{u:'081009',d:'Yaurisque',p:'Paruro'},
+  {u:'081101',d:'Paucartambo',p:'Paucartambo'},{u:'081102',d:'Caicay',p:'Paucartambo'},
+  {u:'081103',d:'Challabamba',p:'Paucartambo'},{u:'081104',d:'Colquepata',p:'Paucartambo'},
+  {u:'081105',d:'Huancarani',p:'Paucartambo'},{u:'081106',d:'Kosñipata',p:'Paucartambo'},
+  {u:'081201',d:'Urcos',p:'Quispicanchi'},{u:'081202',d:'Andahuaylillas',p:'Quispicanchi'},
+  {u:'081203',d:'Camanti',p:'Quispicanchi'},{u:'081204',d:'Ccarhuayo',p:'Quispicanchi'},
+  {u:'081205',d:'Ccatca',p:'Quispicanchi'},{u:'081206',d:'Cusipata',p:'Quispicanchi'},
+  {u:'081207',d:'Huaro',p:'Quispicanchi'},{u:'081208',d:'Lucre',p:'Quispicanchi'},
+  {u:'081209',d:'Marcapata',p:'Quispicanchi'},{u:'081210',d:'Ocongate',p:'Quispicanchi'},
+  {u:'081211',d:'Oropesa',p:'Quispicanchi'},{u:'081212',d:'Quiquijana',p:'Quispicanchi'},
+  {u:'081301',d:'Urubamba',p:'Urubamba'},{u:'081302',d:'Chinchero',p:'Urubamba'},
+  {u:'081303',d:'Huayllabamba',p:'Urubamba'},{u:'081304',d:'Machupicchu',p:'Urubamba'},
+  {u:'081305',d:'Maras',p:'Urubamba'},{u:'081306',d:'Ollantaytambo',p:'Urubamba'},
+  {u:'081307',d:'Yucay',p:'Urubamba'},
+];
+
+let cuscoData = [];
+let scrapingActive = false;
+
+function buildQs(ubigeo) {
+  return `idEleccion=${ID_PRES}&tipoFiltro=ubigeo_nivel_03&idAmbitoGeografico=1`
+       + `&idUbigeoDepartamento=${ubigeo.slice(0,2)}0000`
+       + `&idUbigeoProvincia=${ubigeo.slice(0,4)}00`
+       + `&idUbigeoDistrito=${ubigeo}`;
+}
+
+async function fetchDistritoBrowser({u, d, p}) {
   try {
-    const res = await fetch('/api/cusco/distritos').then(r=>r.json());
-    if (res.ok && res.distritos && res.distritos.length > 0) {
-      cuscoData = res.distritos;
-      renderCusco(cuscoData);
-      document.getElementById('cusco-ts').textContent = 'Actualizado: ' + (res.lastFetch ? new Date(res.lastFetch).toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit',timeZone:'America/Lima'}) : '—');
-      document.getElementById('cusco-total-dist').textContent = res.total;
-      document.getElementById('cusco-estado').textContent = res.online ? '✓ OK' : '—';
-    }
-  } catch(e) { console.error('[Cusco]', e); }
+    const qs = buildQs(u);
+    const [totRes, partRes] = await Promise.all([
+      fetch(`${ONPE_BASE}/totales?${qs}`),
+      fetch(`${ONPE_BASE}/participantes?${qs}`),
+    ]);
+    if (!totRes.ok || !partRes.ok) return null;
+    const tot  = await totRes.json();
+    const part = await partRes.json();
+    if (!tot.success || !part.success) return null;
+    const totData = Array.isArray(tot.data) ? tot.data[0] : tot.data;
+    const pctActas = totData?.actasContabilizadas || totData?.porcentajeActas || null;
+    return {
+      ubigeo: u, distrito: d, provincia: p, pctActas,
+      participantes: (part.data||[])
+        .sort((a,b)=>b.porcentajeVotosValidos-a.porcentajeVotosValidos)
+        .slice(0,6)
+        .map(x=>({ partido:x.nombreAgrupacionPolitica, candidato:x.nombreCandidato||'', pct:x.porcentajeVotosValidos, votos:x.totalVotosValidos })),
+    };
+  } catch(e) { return null; }
+}
+
+async function pLimitBrowser(tasks, concurrency=10) {
+  const results = new Array(tasks.length);
+  let idx = 0;
+  async function worker() { while(idx<tasks.length){const i=idx++;results[i]=await tasks[i]();} }
+  await Promise.all(Array.from({length:concurrency},worker));
+  return results;
+}
+
+function updateProgress(done, total) {
+  const pct = Math.round(done/total*100);
+  document.getElementById('cusco-content').innerHTML = `
+    <div class="scraping-msg">
+      ⏳ <strong>Consultando ONPE directamente…</strong><br>
+      <div style="margin:10px 0;background:var(--bg4);border-radius:4px;height:8px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:var(--red);border-radius:4px;transition:width 0.3s"></div>
+      </div>
+      ${done} / ${total} distritos (${pct}%)<br>
+      <span style="font-size:11px;color:var(--text3)">Las requests van directo desde tu navegador a la ONPE.</span>
+    </div>`;
 }
 
 async function triggerScrape() {
+  if (scrapingActive) return;
+  scrapingActive = true;
   const btn = document.getElementById('btn-scrape');
   btn.disabled = true;
   btn.textContent = '⏳ Scraping…';
-  document.getElementById('cusco-content').innerHTML = `
-    <div class="scraping-msg">
-      ⏳ <strong>Consultando la API de la ONPE…</strong><br>
-      Procesando ~110 distritos de las 13 provincias de Cusco.<br>
-      <span style="font-size:11px;color:var(--text3)">Esto puede tardar 1-3 minutos. Esta página se actualizará automáticamente.</span>
-    </div>`;
-  document.getElementById('cusco-estado').textContent = '⏳ scraping';
+  document.getElementById('cusco-estado').textContent = '⏳';
+  updateProgress(0, DISTRITOS_CUSCO.length);
+
+  let done = 0;
+  const tasks = DISTRITOS_CUSCO.map(dist => async () => {
+    const res = await fetchDistritoBrowser(dist);
+    done++;
+    if (done % 5 === 0 || done === DISTRITOS_CUSCO.length) updateProgress(done, DISTRITOS_CUSCO.length);
+    return res;
+  });
 
   try {
-    await fetch('/api/cusco/refresh', { method: 'POST' });
-    // Polling cada 8s para ver si ya terminó
-    let intentos = 0;
-    const poll = setInterval(async () => {
-      intentos++;
-      const st = await fetch('/api/cusco/status').then(r=>r.json());
-      if (st.totalDistritos > 0) {
-        clearInterval(poll);
-        await loadCusco();
-        btn.disabled = false;
-        btn.textContent = '⟳ Actualizar datos';
-      } else if (intentos > 30) { // máx 4 min
-        clearInterval(poll);
-        document.getElementById('cusco-content').innerHTML = `<div class="scraping-msg" style="border-color:rgba(224,82,82,0.3);color:var(--red)">⚠️ La ONPE no respondió o los datos aún no están disponibles.<br><span style="font-size:11px">Intenta de nuevo en unos minutos.</span></div>`;
-        btn.disabled = false;
-        btn.textContent = '⟳ Reintentar';
-      }
-    }, 8000);
+    const resultados = await pLimitBrowser(tasks, 10);
+    cuscoData = resultados.filter(Boolean);
+    if (cuscoData.length > 0) {
+      renderCusco(cuscoData);
+      document.getElementById('cusco-ts').textContent = 'Actualizado: ' + nowTime();
+      document.getElementById('cusco-total-dist').textContent = cuscoData.length;
+      document.getElementById('cusco-estado').textContent = '✓ OK';
+    } else {
+      document.getElementById('cusco-content').innerHTML = `<div class="scraping-msg" style="border-color:rgba(224,82,82,0.3);color:var(--red)">⚠️ La ONPE no devolvió datos. Intenta de nuevo.</div>`;
+      document.getElementById('cusco-estado').textContent = '✗ Error';
+    }
   } catch(e) {
-    btn.disabled = false;
-    btn.textContent = '⟳ Reintentar';
+    document.getElementById('cusco-content').innerHTML = `<div class="scraping-msg" style="border-color:rgba(224,82,82,0.3);color:var(--red)">⚠️ Error: ${e.message}</div>`;
   }
+  scrapingActive = false;
+  btn.disabled = false;
+  btn.textContent = '⟳ Actualizar datos';
+}
+
+function loadCusco() {
+  // Si ya hay datos en memoria, mostrarlos directamente
+  if (cuscoData.length > 0) renderCusco(cuscoData);
 }
 
 function filterCusco() {
@@ -684,6 +784,22 @@ function renderCusco(distritos) {
   }
   html += '</div>';
   container.innerHTML = html;
+}
+
+function downloadCsv() {
+  if (!cuscoData.length) { alert('Primero ejecuta el scraping.'); return; }
+  const rows = ['Provincia,Distrito,Ubigeo,% Actas,1° Partido,1° %,2° Partido,2° %,3° Partido,3° %,4° Partido,4° %,5° Partido,5° %,6° Partido,6° %'];
+  for (const d of cuscoData) {
+    const p = d.participantes||[];
+    const cols = [d.provincia,d.distrito,d.ubigeo,d.pctActas!=null?d.pctActas.toFixed(2):''];
+    for(let i=0;i<6;i++){cols.push(p[i]?.partido||'');cols.push(p[i]?.pct!=null?p[i].pct.toFixed(2):'');}
+    rows.push(cols.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(','));
+  }
+  const blob = new Blob(['\uFEFF'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cusco_distrital_2026.csv';
+  a.click();
 }
 
 refresh();
